@@ -197,7 +197,7 @@ Outputs:
       Name: skyelp-subnetapp-a
   exportSubnetAppB:
     Description: "Export App Subnet B"
-    Value: !Ref SubnetAppA
+    Value: !Ref SubnetAppB
     Export:
       Name: skyelp-subnetapp-b
   exportSubnetAppC:
