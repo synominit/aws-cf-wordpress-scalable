@@ -1,0 +1,237 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: VPC Architecture
+
+Parameters:
+  CidrBlockValue:
+    Type: "String"
+    Default: 10.16.0.0/16
+    Description: "Enter a subnet to split into twelve /20 subnets"
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref CidrBlockValue
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [!Ref AWS::StackName, VPC]]
+  InternetGateway:
+    Type: "AWS::EC2::InternetGateway"
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [!Ref AWS::StackName, IGW]]
+  InternetGatewayAttachment:
+    Type: "AWS::EC2::VPCGatewayAttachment"
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+  RoutePublic:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [!Ref AWS::StackName, route-public]]
+  RoutePublicDefaultIPv4:
+    Type: "AWS::EC2::Route"
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      RouteTableId:
+        Ref: RoutePublic
+      DestinationCidrBlock: "0.0.0.0/0"
+      GatewayId:
+        Ref: InternetGateway
+  RouteAssociationPublicA:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      SubnetId: !Ref SubnetPublicA
+      RouteTableId:
+        Ref: RoutePublic
+  RouteAssociationPublicB:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      SubnetId: !Ref SubnetPublicB
+      RouteTableId:
+        Ref: RoutePublic
+  RouteAssociationPublicC:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      SubnetId: !Ref SubnetPublicC
+      RouteTableId:
+        Ref: RoutePublic
+  SubnetPublicA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Select ["0", !Cidr [!GetAtt VPC.CidrBlock, "12", "12"]]
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [!Ref AWS::StackName, sn-public-A]]
+  SubnetPublicB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Select ["1", !Cidr [!GetAtt VPC.CidrBlock, "12", "12"]]
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [!Ref AWS::StackName, sn-public-B]]
+  SubnetPublicC:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Select ["2", !Cidr [!GetAtt VPC.CidrBlock, "12", "12"]]
+      AvailabilityZone: !Select [2, !GetAZs ""]
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [!Ref AWS::StackName, sn-public-C]]
+  SubnetAppA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Select ["3", !Cidr [!GetAtt VPC.CidrBlock, "12", "12"]]
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [!Ref AWS::StackName, sn-app-A]]
+  SubnetAppB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Select ["4", !Cidr [!GetAtt VPC.CidrBlock, "12", "12"]]
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [!Ref AWS::StackName, sn-app-B]]
+  SubnetAppC:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Select ["5", !Cidr [!GetAtt VPC.CidrBlock, "12", "12"]]
+      AvailabilityZone: !Select [2, !GetAZs ""]
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [!Ref AWS::StackName, sn-app-C]]
+  SubnetDatabaseA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Select ["6", !Cidr [!GetAtt VPC.CidrBlock, "12", "12"]]
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [!Ref AWS::StackName, sn-db-A]]
+  SubnetDatabaseB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Select ["7", !Cidr [!GetAtt VPC.CidrBlock, "12", "12"]]
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [!Ref AWS::StackName, sn-db-B]]
+  SubnetDatabaseC:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Select ["8", !Cidr [!GetAtt VPC.CidrBlock, "12", "12"]]
+      AvailabilityZone: !Select [2, !GetAZs ""]
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [!Ref AWS::StackName, sn-db-C]]
+  SubnetReservedA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Select ["9", !Cidr [!GetAtt VPC.CidrBlock, "12", "12"]]
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [!Ref AWS::StackName, sn-reserved-A]]
+  SubnetReservedB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Select ["10", !Cidr [!GetAtt VPC.CidrBlock, "12", "12"]]
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [!Ref AWS::StackName, sn-reserved-B]]
+  SubnetReservedC:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Select ["11", !Cidr [!GetAtt VPC.CidrBlock, "12", "12"]]
+      AvailabilityZone: !Select [2, !GetAZs ""]
+      Tags:
+        - Key: Name
+          Value: !Join ["-", [!Ref AWS::StackName, sn-reserved-C]]
+Outputs:
+  exportVPC:
+    Description: "Export VPC ID"
+    Value: !Ref VPC
+    Export:
+      Name: skyelp-vpc-id
+  exportSubnetPublicA:
+    Description: "Export Public Subnet A"
+    Value: !Ref SubnetPublicA
+    Export:
+      Name: skyelp-subnetpublic-a
+  exportSubnetPublicB:
+    Description: "Export Public Subnet B"
+    Value: !Ref SubnetPublicB
+    Export:
+      Name: skyelp-subnetpublic-b
+  exportSubnetPublicC:
+    Description: "Export Public Subnet C"
+    Value: !Ref SubnetPublicC
+    Export:
+      Name: skyelp-subnetpublic-c
+  exportSubnetAppA:
+    Description: "Export App Subnet A"
+    Value: !Ref SubnetAppA
+    Export:
+      Name: skyelp-subnetapp-a
+  exportSubnetAppB:
+    Description: "Export App Subnet B"
+    Value: !Ref SubnetAppA
+    Export:
+      Name: skyelp-subnetapp-b
+  exportSubnetAppC:
+    Description: "Export App Subnet C"
+    Value: !Ref SubnetAppC
+    Export:
+      Name: skyelp-subnetapp-c
+  exportSubnetDatabaseA:
+    Description: "Export Database Subnet A"
+    Value: !Ref SubnetDatabaseA
+    Export:
+      Name: skyelp-subnetdatabase-a
+  exportSubnetDatabaseB:
+    Description: "Export Database Subnet B"
+    Value: !Ref SubnetDatabaseB
+    Export:
+      Name: skyelp-subnetdatabase-b
+  exportSubnetDatabaseC:
+    Description: "Export Database Subnet C"
+    Value: !Ref SubnetDatabaseC
+    Export:
+      Name: skyelp-subnetdatabase-c
+  exportSubnetReservedA:
+    Description: "Export Reserved Subnet A"
+    Value: !Ref SubnetReservedA
+    Export:
+      Name: skyelp-subnetreserved-a
+  exportSubnetReservedB:
+    Description: "Export Reserved Subnet B"
+    Value: !Ref SubnetReservedB
+    Export:
+      Name: skyelp-subnetreserved-b
+  exportSubnetReservedC:
+    Description: "Export Reserved Subnet C"
+    Value: !Ref SubnetReservedC
+    Export:
+      Name: skyelp-subnetreserved-c

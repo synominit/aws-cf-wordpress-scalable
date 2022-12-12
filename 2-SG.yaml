@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: "Create the Security Groups needed, VPC.yaml needs to ran first"
+Resources:
+  SGWordpress:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      VpcId: !ImportValue skyelp-vpc-id
+      GroupDescription: "Control HTTP access to Wordpress Instances"
+      SecurityGroupIngress:
+        - Description: "Allow HTTP IPv4 IN"
+          IpProtocol: tcp
+          FromPort: "80"
+          ToPort: "80"
+          CidrIp: "0.0.0.0/0"
+  SGEFS:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      VpcId: !ImportValue skyelp-vpc-id
+      GroupDescription: Control NFS access to EFS
+      SecurityGroupIngress:
+        - Description: "Allow NFS/EFS IN"
+          IpProtocol: tcp
+          FromPort: "2049"
+          ToPort: "2049"
+          SourceSecurityGroupId: !Ref SGWordpress
+  SGRDS:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      VpcId: !ImportValue skyelp-vpc-id
+      GroupDescription: "Ingress control for RDS instance"
+      SecurityGroupIngress:
+        - Description: "Allow WordPress Instances to access Database IPv4 IN"
+          IpProtocol: tcp
+          FromPort: "3306"
+          ToPort: "3306"
+          SourceSecurityGroupId: !Ref SGWordpress
+Outputs:
+  exportSGWordpress:
+    Description: "Export Wordpress Instance Security Group"
+    Value: !Ref SGWordpress
+    Export:
+      Name: skyelp-wordpress-sg
+  exportSGEFS:
+    Description: "Export EFS Security Group"
+    Value: !Ref SGEFS
+    Export:
+      Name: skyelp-EFS-sg
+  exportSGRDS:
+    Description: "Export RDS Security Group"
+    Value: !Ref SGRDS
+    Export:
+      Name: skyelp-RDS-sg
