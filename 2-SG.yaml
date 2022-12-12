@@ -34,6 +34,17 @@ Resources:
           FromPort: "3306"
           ToPort: "3306"
           SourceSecurityGroupId: !Ref SGWordpress
+  SGALB:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Control HTTP access to Load Balancer
+      SecurityGroupIngress:
+        - Description: "Allow HTTP IPv4 IN"
+          IpProtocol: tcp
+          FromPort: "80"
+          ToPort: "80"
+          CidrIp: "0.0.0.0/0"
 Outputs:
   exportSGWordpress:
     Description: "Export Wordpress Instance Security Group"
@@ -50,3 +61,8 @@ Outputs:
     Value: !Ref SGRDS
     Export:
       Name: skyelp-RDS-sg
+  exportSGALB:
+    Description: "Export Application Load Balancer Security Group"
+    Value: !Ref SGALB
+    Export:
+      Name: skyelp-ALB-sg
