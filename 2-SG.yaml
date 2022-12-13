@@ -37,7 +37,7 @@ Resources:
   SGALB:
     Type: "AWS::EC2::SecurityGroup"
     Properties:
-      VpcId: !Ref VPC
+      VpcId: !ImportValue skyelp-vpc-id
       GroupDescription: Control HTTP access to Load Balancer
       SecurityGroupIngress:
         - Description: "Allow HTTP IPv4 IN"
