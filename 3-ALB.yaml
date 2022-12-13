@@ -1,0 +1,44 @@
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: "Setup the Application Load Balancer"
+Resources: 
+  ALB:
+    Type: "AWS::ElasticLoadBalancingV2::LoadBalancer"
+    Properties:
+      IpAddressType: "ipv4"
+      Scheme: "internet-facing"
+      SecurityGroups:
+        - !ImportValue skyelp-ALB-sg
+      Subnets:
+        - !ImportValue skyelp-subnetpublic-a
+        - !ImportValue skyelp-subnetpublic-b
+        - !ImportValue skyelp-subnetpublic-c
+      Tags:
+        - Key: Name
+          Value: !Join ["", ["SKYELP-ALB-", !Ref "AWS::StackName"]]
+      Type: "application"
+  ALBListener:
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref ALBTargetGroup
+      LoadBalancerArn: !Ref ALB
+      Port: 80
+      Protocol: HTTP
+  ALBTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: /healthcheck.html
+      HealthCheckTimeoutSeconds: 5
+      Port: 80
+      Protocol: HTTP
+      UnhealthyThresholdCount: 5
+      VpcId: !ImportValue skyelp-vpc-id
+Outputs:
+  WordpressURL:
+    Description: WordpressURL
+    Value: !Join ["", ["http://", !GetAtt ALB.DNSName]]
+    Export:
+      Name: wordpress-app-loadbalancer-url

@@ -1,0 +1,80 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: "Setup RDS for Wordpress"
+Parameters:
+  RDSMultiAZ:
+    Description: Select True if you want to use Multi AZ, additional AWS charges will apply
+    Type: "String"
+    Default: "False"
+    AllowedValues:
+      - "True"
+      - "False"
+  DatabaseRestoreSnapshot:
+    Description: The snapshot name to restore from - Leave Blank for a new DB
+    Type: String
+  DatabaseName:
+    Description: "If there is no snapshot, specify a DB name (Must be a valid name containing alphanumeric characters, or any of the following: -/_+=.@!)"
+    Type: String
+Conditions:
+  NoSnapshot: !Equals ["", !Ref DatabaseRestoreSnapshot]
+Resources:
+  SecretsManagerRDSCredentials:
+    Type: "AWS::SecretsManager::Secret"
+    Properties:
+      Description: AWS RDS admin credentials
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "admin"}'
+        GenerateStringKey: password
+        PasswordLength: 32
+        ExcludeCharacters: '"@/\'
+  SecretsManagerRDSInstanceAttachment:
+    Type: 'AWS::SecretsManager::SecretTargetAttachment'
+    Properties:
+      SecretId: !Ref SecretsManagerRDSCredentials
+      TargetId: !Ref DB
+      TargetType: 'AWS::RDS::DBInstance'
+  RDSSubnetGroup:
+    Type: "AWS::RDS::DBSubnetGroup"
+    Properties:
+      DBSubnetGroupDescription: RDS Subnet Groups
+      SubnetIds:
+        - !ImportValue skyelp-subnetdatabase-a
+        - !ImportValue skyelp-subnetdatabase-b
+        - !ImportValue skyelp-subnetdatabase-c
+  DB:
+    Type: "AWS::RDS::DBInstance"
+    DeletionPolicy: Delete
+    Properties:
+      AllocatedStorage: "20"
+      DBInstanceClass: "db.t2.micro"
+      DBInstanceIdentifier: WordPressDB
+      DBSubnetGroupName: !Ref RDSSubnetGroup
+      DBName: !If [NoSnapshot, !Ref DatabaseName, !Ref "AWS::NoValue"]
+      Engine: MySQL
+      EngineVersion: "8.0.28"
+      MasterUsername: !If [NoSnapshot, !Sub "{{resolve:secretsmanager:${SecretsManagerRDSCredentials}::username}}", !Ref "AWS::NoValue"]
+      MasterUserPassword: !If [NoSnapshot, !Sub "{{resolve:secretsmanager:${SecretsManagerRDSCredentials}::password}}", !Ref "AWS::NoValue"]
+      MultiAZ: !Ref RDSMultiAZ
+      StorageType: gp2
+      Tags:
+        - Key: Name
+          Value: "WP-RDS-DB"
+      VPCSecurityGroups:
+        - !ImportValue skyelp-RDS-sg
+      DBSnapshotIdentifier:
+        !If [NoSnapshot, !Ref "AWS::NoValue", !Ref DatabaseRestoreSnapshot]
+Outputs:
+  exportDBname:
+    Description: "Export DB name"
+    Value: !Ref DatabaseName
+    Export:
+      Name: skyelp-db-name
+  exportDBaddress:
+    Description: "Export DB address"
+    Value: !GetAtt DB.Endpoint.Address
+    Export:
+      Name: skyelp-db-endpoint
+  exportSecretsname:
+    Description: "Export the arn for the SecretsManagerRDSCredentials"
+    Value: !Ref SecretsManagerRDSCredentials
+    Export:
+      Name: skyelp-secretsmanager-arn

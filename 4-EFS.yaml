@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: "Create the EFS NFS Share for Wordpress"
+Resources:
+  EFS:
+    Type: "AWS::EFS::FileSystem"
+    Properties:
+      FileSystemTags:
+        - Key: Name
+          Value: !Join [ '', [ 'SKYELP-EFS-WordPress / ', !Ref 'AWS::StackName' ] ]
+  EFSMountTargetA:
+    Type: "AWS::EFS::MountTarget"
+    Properties:
+      FileSystemId: !Ref EFS
+      SecurityGroups:
+        - !ImportValue skyelp-wordpress-sg
+      SubnetId: !ImportValue skyelp-subnetapp-a
+  EFSMountTargetB:
+    Type: "AWS::EFS::MountTarget"
+    Properties:
+      FileSystemId: !Ref EFS
+      SecurityGroups:
+        - !ImportValue skyelp-wordpress-sg
+      SubnetId: !ImportValue skyelp-subnetapp-b
+  EFSMountTargetC:
+    Type: "AWS::EFS::MountTarget"
+    Properties:
+      FileSystemId: !Ref EFS
+      SecurityGroups:
+        - !ImportValue skyelp-wordpress-sg
+      SubnetId: !ImportValue skyelp-subnetapp-c
+
+Outputs:
+  exportEFS:
+    Description: "Export EFS"
+    Value: !Ref EFS
+    Export:
+      Name: skyelp-wordpress-efs

@@ -1,0 +1,50 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: "IAM Roles, Policys used accross the Wordpress Architecture"
+Resources: 
+  RDSSecretsReadPolicy:
+    Type: "AWS::IAM::ManagedPolicy"
+    Properties:
+      Description: "Managed Policy to allow Wordpress EC2 Read Access to SecretsManagerRDSCredentials"
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - "secretsmanager:GetSecretValue"
+            Resource:
+              - !ImportValue skyelp-secretsmanager-arn
+  WordpressRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      Path: /
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+        - "arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess"
+        - "arn:aws:iam::aws:policy/AmazonElasticFileSystemClientFullAccess"
+        - !Ref RDSSecretsReadPolicy
+  WordpressInstanceProfile:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties:
+      Path: /
+      Roles:
+        - !Ref WordpressRole
+Outputs:
+    exportWordpressInstanceProfile: 
+        Description: "Export Wordpress EC2 Instance Profile"
+        Value: !Ref WordpressInstanceProfile
+        Export:
+            Name: skyelp-wordpress-instanceprofile
+    exportWordpressRole: 
+        Description: "Export Wordpress EC2 Instance Role"
+        Value: !Ref WordpressRole
+        Export:
+            Name: skyelp-wordpress-instancerole
