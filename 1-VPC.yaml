@@ -61,12 +61,109 @@ Resources:
       SubnetId: !Ref SubnetPublicC
       RouteTableId:
         Ref: RoutePublic
+  EIPA:
+    Type: 'AWS::EC2::EIP'
+    Properties:
+      Domain: vpc
+  EIPB:
+    Type: 'AWS::EC2::EIP'
+    Properties:
+      Domain: vpc
+  EIPC:
+    Type: 'AWS::EC2::EIP'
+    Properties:
+      Domain: vpc
+  NatGatewayA:
+    Type: 'AWS::EC2::NatGateway'
+    Properties:
+      AllocationId: !GetAtt EIPA.AllocationId
+      SubnetId: !Ref SubnetPublicA
+  NatGatewayB:
+    Type: 'AWS::EC2::NatGateway'
+    Properties:
+      AllocationId: !GetAtt EIPB.AllocationId
+      SubnetId: !Ref SubnetPublicB
+  NatGatewayC:
+    Type: 'AWS::EC2::NatGateway'
+    Properties:
+      AllocationId: !GetAtt EIPC.AllocationId
+      SubnetId: !Ref SubnetPublicC
+  RouteTablePrivateA: 
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: skyelp-rt-privateA
+  RouteTablePrivateB: 
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: skyelp-rt-privateB
+  RouteTablePrivateC: 
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: skyelp-rt-privateC
+  RouteNatGWA: 
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref RouteTablePrivateA
+      DestinationCidrBlock: '0.0.0.0/0'
+      NatGatewayId: !Ref NatGatewayA
+  RouteNatGWB: 
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref RouteTablePrivateB
+      DestinationCidrBlock: '0.0.0.0/0'
+      NatGatewayId: !Ref NatGatewayB
+  RouteNatGWC: 
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref RouteTablePrivateC
+      DestinationCidrBlock: '0.0.0.0/0'
+      NatGatewayId: !Ref NatGatewayC
+  RouteTableAssociationAppA:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref SubnetAppA
+      RouteTableId: !Ref RouteTablePrivateA
+  RouteTableAssociationAppB:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref SubnetAppB
+      RouteTableId: !Ref RouteTablePrivateB
+  RouteTableAssociationAppC:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref SubnetAppC
+      RouteTableId: !Ref RouteTablePrivateC
+  RouteTableAssociationReservedA:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref SubnetReservedA
+      RouteTableId: !Ref RouteTablePrivateA
+  RouteTableAssociationReservedB:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref SubnetReservedB
+      RouteTableId: !Ref RouteTablePrivateB
+  RouteTableAssociationReservedC:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref SubnetReservedC
+      RouteTableId: !Ref RouteTablePrivateC
   SubnetPublicA:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
       CidrBlock: !Select ["0", !Cidr [!GetAtt VPC.CidrBlock, "12", "12"]]
       AvailabilityZone: !Select [0, !GetAZs ""]
+      MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
           Value: !Join ["-", [!Ref AWS::StackName, sn-public-A]]
@@ -75,6 +172,7 @@ Resources:
     Properties:
       CidrBlock: !Select ["1", !Cidr [!GetAtt VPC.CidrBlock, "12", "12"]]
       AvailabilityZone: !Select [1, !GetAZs ""]
+      MapPublicIpOnLaunch: true
       VpcId: !Ref VPC
       Tags:
         - Key: Name
@@ -84,6 +182,7 @@ Resources:
     Properties:
       CidrBlock: !Select ["2", !Cidr [!GetAtt VPC.CidrBlock, "12", "12"]]
       AvailabilityZone: !Select [2, !GetAZs ""]
+      MapPublicIpOnLaunch: true
       VpcId: !Ref VPC
       Tags:
         - Key: Name
@@ -115,7 +214,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Join ["-", [!Ref AWS::StackName, sn-app-C]]
-  SubnetDatabaseA:
+  SubnetDataA:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
@@ -124,7 +223,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Join ["-", [!Ref AWS::StackName, sn-db-A]]
-  SubnetDatabaseB:
+  SubnetDataB:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
@@ -133,7 +232,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Join ["-", [!Ref AWS::StackName, sn-db-B]]
-  SubnetDatabaseC:
+  SubnetDataC:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
@@ -205,21 +304,21 @@ Outputs:
     Value: !Ref SubnetAppC
     Export:
       Name: skyelp-subnetapp-c
-  exportSubnetDatabaseA:
-    Description: "Export Database Subnet A"
-    Value: !Ref SubnetDatabaseA
+  exportSubnetDataA:
+    Description: "Export Data Subnet A"
+    Value: !Ref SubnetDataA
     Export:
-      Name: skyelp-subnetdatabase-a
-  exportSubnetDatabaseB:
-    Description: "Export Database Subnet B"
-    Value: !Ref SubnetDatabaseB
+      Name: skyelp-subnetdata-a
+  exportSubnetDataB:
+    Description: "Export Data Subnet B"
+    Value: !Ref SubnetDataB
     Export:
-      Name: skyelp-subnetdatabase-b
-  exportSubnetDatabaseC:
-    Description: "Export Database Subnet C"
-    Value: !Ref SubnetDatabaseC
+      Name: skyelp-subnetdata-b
+  exportSubnetDataC:
+    Description: "Export Data Subnet C"
+    Value: !Ref SubnetDataC
     Export:
-      Name: skyelp-subnetdatabase-c
+      Name: skyelp-subnetdata-c
   exportSubnetReservedA:
     Description: "Export Reserved Subnet A"
     Value: !Ref SubnetReservedA
