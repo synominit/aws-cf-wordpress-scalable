@@ -65,7 +65,7 @@ Resources:
       MasterUsername:
         Fn::Sub: "{{resolve:secretsmanager:${SecretsManagerRDSCredentials}::username}}"
       MasterUserPassword:
-        FN::Sub: "{{resolve:secretsmanager:${SecretsManagerRDSCredentials}::password}}"
+        Fn::Sub: "{{resolve:secretsmanager:${SecretsManagerRDSCredentials}::password}}"
       MultiAZ:
         Ref: RDSMultiAZ
       StorageType: gp2
