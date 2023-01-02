@@ -62,98 +62,98 @@ Resources:
       RouteTableId:
         Ref: RoutePublic
   EIPA:
-    Type: 'AWS::EC2::EIP'
+    Type: "AWS::EC2::EIP"
     Properties:
       Domain: vpc
   EIPB:
-    Type: 'AWS::EC2::EIP'
+    Type: "AWS::EC2::EIP"
     Properties:
       Domain: vpc
   EIPC:
-    Type: 'AWS::EC2::EIP'
+    Type: "AWS::EC2::EIP"
     Properties:
       Domain: vpc
   NatGatewayA:
-    Type: 'AWS::EC2::NatGateway'
+    Type: "AWS::EC2::NatGateway"
     Properties:
       AllocationId: !GetAtt EIPA.AllocationId
       SubnetId: !Ref SubnetPublicA
   NatGatewayB:
-    Type: 'AWS::EC2::NatGateway'
+    Type: "AWS::EC2::NatGateway"
     Properties:
       AllocationId: !GetAtt EIPB.AllocationId
       SubnetId: !Ref SubnetPublicB
   NatGatewayC:
-    Type: 'AWS::EC2::NatGateway'
+    Type: "AWS::EC2::NatGateway"
     Properties:
       AllocationId: !GetAtt EIPC.AllocationId
       SubnetId: !Ref SubnetPublicC
-  RouteTablePrivateA: 
-    Type: 'AWS::EC2::RouteTable'
+  RouteTablePrivateA:
+    Type: "AWS::EC2::RouteTable"
     Properties:
       VpcId: !Ref VPC
       Tags:
-      - Key: Name
-        Value: skyelp-rt-privateA
-  RouteTablePrivateB: 
-    Type: 'AWS::EC2::RouteTable'
+        - Key: Name
+          Value: skyelp-rt-privateA
+  RouteTablePrivateB:
+    Type: "AWS::EC2::RouteTable"
     Properties:
       VpcId: !Ref VPC
       Tags:
-      - Key: Name
-        Value: skyelp-rt-privateB
-  RouteTablePrivateC: 
-    Type: 'AWS::EC2::RouteTable'
+        - Key: Name
+          Value: skyelp-rt-privateB
+  RouteTablePrivateC:
+    Type: "AWS::EC2::RouteTable"
     Properties:
       VpcId: !Ref VPC
       Tags:
-      - Key: Name
-        Value: skyelp-rt-privateC
-  RouteNatGWA: 
-    Type: 'AWS::EC2::Route'
+        - Key: Name
+          Value: skyelp-rt-privateC
+  RouteNatGWA:
+    Type: "AWS::EC2::Route"
     Properties:
       RouteTableId: !Ref RouteTablePrivateA
-      DestinationCidrBlock: '0.0.0.0/0'
+      DestinationCidrBlock: "0.0.0.0/0"
       NatGatewayId: !Ref NatGatewayA
-  RouteNatGWB: 
-    Type: 'AWS::EC2::Route'
+  RouteNatGWB:
+    Type: "AWS::EC2::Route"
     Properties:
       RouteTableId: !Ref RouteTablePrivateB
-      DestinationCidrBlock: '0.0.0.0/0'
+      DestinationCidrBlock: "0.0.0.0/0"
       NatGatewayId: !Ref NatGatewayB
-  RouteNatGWC: 
-    Type: 'AWS::EC2::Route'
+  RouteNatGWC:
+    Type: "AWS::EC2::Route"
     Properties:
       RouteTableId: !Ref RouteTablePrivateC
-      DestinationCidrBlock: '0.0.0.0/0'
+      DestinationCidrBlock: "0.0.0.0/0"
       NatGatewayId: !Ref NatGatewayC
   RouteTableAssociationAppA:
-    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
     Properties:
       SubnetId: !Ref SubnetAppA
       RouteTableId: !Ref RouteTablePrivateA
   RouteTableAssociationAppB:
-    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
     Properties:
       SubnetId: !Ref SubnetAppB
       RouteTableId: !Ref RouteTablePrivateB
   RouteTableAssociationAppC:
-    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
     Properties:
       SubnetId: !Ref SubnetAppC
       RouteTableId: !Ref RouteTablePrivateC
   RouteTableAssociationReservedA:
-    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
     Properties:
       SubnetId: !Ref SubnetReservedA
       RouteTableId: !Ref RouteTablePrivateA
   RouteTableAssociationReservedB:
-    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
     Properties:
       SubnetId: !Ref SubnetReservedB
       RouteTableId: !Ref RouteTablePrivateB
   RouteTableAssociationReservedC:
-    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
     Properties:
       SubnetId: !Ref SubnetReservedC
       RouteTableId: !Ref RouteTablePrivateC

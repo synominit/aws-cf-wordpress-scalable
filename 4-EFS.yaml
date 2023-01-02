@@ -1,37 +1,58 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: "Create the EFS NFS Share for Wordpress"
+Parameters:
+  WordPressSG:
+    Type: "AWS::EC2::SecurityGroup::Id"
+    Description: Enter the security group ID for WordPress App
+  DataSubnetA:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: Enter the Subnet ID for SubnetDataA
+  DataSubnetB:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: Enter the Subnet ID for SubnetDataA
+  DataSubnetC:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: Enter the Subnet ID for SubnetDataA
 Resources:
   EFS:
     Type: "AWS::EFS::FileSystem"
     Properties:
       FileSystemTags:
         - Key: Name
-          Value: !Join [ '', [ 'SKYELP-EFS-WordPress / ', !Ref 'AWS::StackName' ] ]
+          Value:
+            Fn::Join: ["", ["SKYELP-EFS-WordPress / ", !Ref "AWS::StackName"]]
   EFSMountTargetA:
     Type: "AWS::EFS::MountTarget"
     Properties:
-      FileSystemId: !Ref EFS
+      FileSystemId:
+        Ref: EFS
       SecurityGroups:
-        - !ImportValue skyelp-wordpress-sg
-      SubnetId: !ImportValue skyelp-subnetapp-a
+        - Ref: WordPressSG
+      SubnetId:
+        Ref: DataSubnetA
   EFSMountTargetB:
     Type: "AWS::EFS::MountTarget"
     Properties:
-      FileSystemId: !Ref EFS
+      FileSystemId:
+        Ref: EFS
       SecurityGroups:
-        - !ImportValue skyelp-wordpress-sg
-      SubnetId: !ImportValue skyelp-subnetapp-b
+        - Ref: WordPressSG
+      SubnetId:
+        Ref: DataSubnetB
   EFSMountTargetC:
     Type: "AWS::EFS::MountTarget"
     Properties:
-      FileSystemId: !Ref EFS
+      FileSystemId:
+        Ref: EFS
       SecurityGroups:
-        - !ImportValue skyelp-wordpress-sg
-      SubnetId: !ImportValue skyelp-subnetapp-c
+        - Ref: WordPressSG
+      SubnetId:
+        Ref: DataSubnetC
 
 Outputs:
   exportEFS:
     Description: "Export EFS"
-    Value: !Ref EFS
+    Value:
+      Ref: EFS
     Export:
       Name: skyelp-wordpress-efs

@@ -8,14 +8,21 @@ Parameters:
     AllowedValues:
       - "True"
       - "False"
-  DatabaseRestoreSnapshot:
-    Description: The snapshot name to restore from - Leave Blank for a new DB
-    Type: String
   DatabaseName:
     Description: "If there is no snapshot, specify a DB name (Must be a valid name containing alphanumeric characters, or any of the following: -/_+=.@!)"
     Type: String
-Conditions:
-  NoSnapshot: !Equals ["", !Ref DatabaseRestoreSnapshot]
+  RDSSG:
+    Type: "AWS::EC2::SecurityGroup::Id"
+    Description: Enter the security group ID for RDS
+  DataSubnetA:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: Enter the Subnet ID for SubnetDataA
+  DataSubnetB:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: Enter the Subnet ID for SubnetDataB
+  DataSubnetC:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: Enter the Subnet ID for SubnetDataC
 Resources:
   SecretsManagerRDSCredentials:
     Type: "AWS::SecretsManager::Secret"
@@ -27,19 +34,21 @@ Resources:
         PasswordLength: 32
         ExcludeCharacters: '"@/\'
   SecretsManagerRDSInstanceAttachment:
-    Type: 'AWS::SecretsManager::SecretTargetAttachment'
+    Type: "AWS::SecretsManager::SecretTargetAttachment"
     Properties:
-      SecretId: !Ref SecretsManagerRDSCredentials
-      TargetId: !Ref DB
-      TargetType: 'AWS::RDS::DBInstance'
+      SecretId:
+        Ref: SecretsManagerRDSCredentials
+      TargetId:
+        Ref: DB
+      TargetType: "AWS::RDS::DBInstance"
   RDSSubnetGroup:
     Type: "AWS::RDS::DBSubnetGroup"
     Properties:
       DBSubnetGroupDescription: RDS Subnet Groups
       SubnetIds:
-        - !ImportValue skyelp-subnetdatabase-a
-        - !ImportValue skyelp-subnetdatabase-b
-        - !ImportValue skyelp-subnetdatabase-c
+        - Ref: DataSubnetA
+        - Ref: DataSubnetB
+        - Ref: DataSubnetC
   DB:
     Type: "AWS::RDS::DBInstance"
     DeletionPolicy: Delete
@@ -47,34 +56,40 @@ Resources:
       AllocatedStorage: "20"
       DBInstanceClass: "db.t2.micro"
       DBInstanceIdentifier: WordPressDB
-      DBSubnetGroupName: !Ref RDSSubnetGroup
-      DBName: !If [NoSnapshot, !Ref DatabaseName, !Ref "AWS::NoValue"]
+      DBSubnetGroupName:
+        Ref: RDSSubnetGroup
+      DBName:
+        Ref: DatabaseName
       Engine: MySQL
       EngineVersion: "8.0.28"
-      MasterUsername: !If [NoSnapshot, !Sub "{{resolve:secretsmanager:${SecretsManagerRDSCredentials}::username}}", !Ref "AWS::NoValue"]
-      MasterUserPassword: !If [NoSnapshot, !Sub "{{resolve:secretsmanager:${SecretsManagerRDSCredentials}::password}}", !Ref "AWS::NoValue"]
-      MultiAZ: !Ref RDSMultiAZ
+      MasterUsername:
+        Fn::Sub: "{{resolve:secretsmanager:${SecretsManagerRDSCredentials}::username}}"
+      MasterUserPassword:
+        FN::Sub: "{{resolve:secretsmanager:${SecretsManagerRDSCredentials}::password}}"
+      MultiAZ:
+        Ref: RDSMultiAZ
       StorageType: gp2
       Tags:
         - Key: Name
           Value: "WP-RDS-DB"
       VPCSecurityGroups:
-        - !ImportValue skyelp-RDS-sg
-      DBSnapshotIdentifier:
-        !If [NoSnapshot, !Ref "AWS::NoValue", !Ref DatabaseRestoreSnapshot]
+        - Ref: RDSSG
 Outputs:
   exportDBname:
     Description: "Export DB name"
-    Value: !Ref DatabaseName
+    Value:
+      Ref: DatabaseName
     Export:
       Name: skyelp-db-name
   exportDBaddress:
     Description: "Export DB address"
-    Value: !GetAtt DB.Endpoint.Address
+    Value:
+      Fn::GetAtt: DB.Endpoint.Address
     Export:
       Name: skyelp-db-endpoint
-  exportSecretsname:
+  exportRDSSecretsARN:
     Description: "Export the arn for the SecretsManagerRDSCredentials"
-    Value: !Ref SecretsManagerRDSCredentials
+    Value:
+      Ref: SecretsManagerRDSCredentials
     Export:
       Name: skyelp-secretsmanager-arn

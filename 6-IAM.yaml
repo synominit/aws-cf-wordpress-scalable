@@ -1,6 +1,10 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: "IAM Roles, Policys used accross the Wordpress Architecture"
-Resources: 
+Parameters:
+  RDSSecretsARN:
+    Type: "String"
+    Description: "Enter the arn from RDS Secrets Manager"
+Resources:
   RDSSecretsReadPolicy:
     Type: "AWS::IAM::ManagedPolicy"
     Properties:
@@ -12,7 +16,7 @@ Resources:
             Action:
               - "secretsmanager:GetSecretValue"
             Resource:
-              - !ImportValue skyelp-secretsmanager-arn
+              - Ref: RDSSecretsARN
   WordpressRole:
     Type: "AWS::IAM::Role"
     Properties:
@@ -30,21 +34,25 @@ Resources:
         - "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
         - "arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess"
         - "arn:aws:iam::aws:policy/AmazonElasticFileSystemClientFullAccess"
-        - !Ref RDSSecretsReadPolicy
+        - "arn:aws:iam::aws:policy/AWSCloudFormationReadOnlyAccess"
+        - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+        - Ref: RDSSecretsReadPolicy
   WordpressInstanceProfile:
     Type: "AWS::IAM::InstanceProfile"
     Properties:
       Path: /
       Roles:
-        - !Ref WordpressRole
+        - Ref: WordpressRole
 Outputs:
-    exportWordpressInstanceProfile: 
-        Description: "Export Wordpress EC2 Instance Profile"
-        Value: !Ref WordpressInstanceProfile
-        Export:
-            Name: skyelp-wordpress-instanceprofile
-    exportWordpressRole: 
-        Description: "Export Wordpress EC2 Instance Role"
-        Value: !Ref WordpressRole
-        Export:
-            Name: skyelp-wordpress-instancerole
+  exportWordpressInstanceProfile:
+    Description: "Export Wordpress EC2 Instance Profile ARN"
+    Value:
+      Fn::GetAtt: ["WordpressInstanceProfile", "Name"]
+    Export:
+      Name: skyelp-wordpress-instanceprofile
+  exportWordpressRole:
+    Description: "Export Wordpress EC2 Instance Role"
+    Value:
+      Ref: WordpressRole
+    Export:
+      Name: skyelp-wordpress-instancerole

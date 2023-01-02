@@ -1,0 +1,56 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: "Wordpress App Auto Scaling Group"
+Parameters:
+  AppAsgMax:
+    AllowedPattern: ^([0-0]?[0-9]|10)$
+    ConstraintDescription: Must be a number between 1 and 30.
+    Default: 1
+    Description: Specifies the maximum number of EC2 instances in the App Autoscaling Group.
+    Type: String
+  AppAsgMin:
+    AllowedPattern: ^([0-0]?[0-9]|10)$
+    ConstraintDescription: Must be a number between 0 and 10.
+    Default: 1
+    Description: Specifies the minimum number of EC2 instances in the App Autoscaling Group.
+    Type: String
+  AppAsgDesired:
+    AllowedPattern: ^([0-0]?[0-9]|10)$
+    ConstraintDescription: Must be a number between 0 and 10.
+    Default: 1
+    Description: Specifies the Desired of EC2 instances in the App Autoscaling Group.
+    Type: String
+  AppSubnetA:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: Enter the Subnet ID for SubnetAppA
+  AppSubnetB:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: Enter the Subnet ID for SubnetAppB
+  AppSubnetC:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: Enter the Subnet ID for SubnetAppC
+  LaunchTemplateWordpress:
+    Type: "String"
+    Description: Enter the Launch Template ID for Wordpress
+
+Resources:
+  ASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      VPCZoneIdentifier:
+        - Ref: AppSubnetA
+        - Ref: AppSubnetB
+        - Ref: AppSubnetC
+      LaunchTemplate:
+        LaunchTemplateId:
+          Ref: LaunchTemplateWordpress
+        Version: "1"
+      MaxSize:
+        Ref: AppAsgMax
+      MinSize:
+        Ref: AppAsgMin
+      DesiredCapacity:
+        Ref: AppAsgDesired
+      Tags:
+        - Key: "Name"
+          Value: "SKYELP-WORDPRESS"
+          PropagateAtLaunch: true

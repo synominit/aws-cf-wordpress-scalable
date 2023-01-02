@@ -1,18 +1,33 @@
-
 AWSTemplateFormatVersion: 2010-09-09
 Description: "Setup the Application Load Balancer"
-Resources: 
+Parameters:
+  ALBSG:
+    Type: "AWS::EC2::SecurityGroup::Id"
+    Description: Enter a valid security group ID for Application Load Balancer
+  VPCID:
+    Type: "AWS::EC2::VPC::Id"
+    Description: Input the VPC ID
+  PublicSubnetA:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: Enter the Subnet ID for SubnetPublicA
+  PublicSubnetB:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: Enter the Subnet ID for SubnetPublicA
+  PublicSubnetC:
+    Type: "AWS::EC2::Subnet::Id"
+    Description: Enter the Subnet ID for SubnetPublicA
+Resources:
   ALB:
     Type: "AWS::ElasticLoadBalancingV2::LoadBalancer"
     Properties:
       IpAddressType: "ipv4"
       Scheme: "internet-facing"
       SecurityGroups:
-        - !ImportValue skyelp-ALB-sg
+        - !Ref ALBSG
       Subnets:
-        - !ImportValue skyelp-subnetpublic-a
-        - !ImportValue skyelp-subnetpublic-b
-        - !ImportValue skyelp-subnetpublic-c
+        - !Ref PublicSubnetA
+        - !Ref PublicSubnetB
+        - !Ref PublicSubnetC
       Tags:
         - Key: Name
           Value: !Join ["", ["SKYELP-ALB-", !Ref "AWS::StackName"]]
@@ -35,7 +50,7 @@ Resources:
       Port: 80
       Protocol: HTTP
       UnhealthyThresholdCount: 5
-      VpcId: !ImportValue skyelp-vpc-id
+      VpcId: !Ref VPCID
 Outputs:
   WordpressURL:
     Description: WordpressURL

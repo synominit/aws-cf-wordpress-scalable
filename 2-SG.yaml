@@ -1,10 +1,14 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: "Create the Security Groups needed, VPC.yaml needs to ran first"
+Parameters:
+  VPCID:
+    Type: "AWS::EC2::VPC::Id"
+    Description: Input the VPC ID
 Resources:
   SGWordpress:
     Type: "AWS::EC2::SecurityGroup"
     Properties:
-      VpcId: !ImportValue skyelp-vpc-id
+      VpcId: !Ref VPCID
       GroupDescription: "Control HTTP access to Wordpress Instances"
       SecurityGroupIngress:
         - Description: "Allow HTTP IPv4 IN"
@@ -15,7 +19,7 @@ Resources:
   SGEFS:
     Type: "AWS::EC2::SecurityGroup"
     Properties:
-      VpcId: !ImportValue skyelp-vpc-id
+      VpcId: !Ref VPCID
       GroupDescription: Control NFS access to EFS
       SecurityGroupIngress:
         - Description: "Allow NFS/EFS IN"
@@ -26,7 +30,7 @@ Resources:
   SGRDS:
     Type: "AWS::EC2::SecurityGroup"
     Properties:
-      VpcId: !ImportValue skyelp-vpc-id
+      VpcId: !Ref VPCID
       GroupDescription: "Ingress control for RDS instance"
       SecurityGroupIngress:
         - Description: "Allow WordPress Instances to access Database IPv4 IN"
@@ -37,7 +41,7 @@ Resources:
   SGALB:
     Type: "AWS::EC2::SecurityGroup"
     Properties:
-      VpcId: !ImportValue skyelp-vpc-id
+      VpcId: !Ref VPCID
       GroupDescription: Control HTTP access to Load Balancer
       SecurityGroupIngress:
         - Description: "Allow HTTP IPv4 IN"
@@ -45,6 +49,14 @@ Resources:
           FromPort: "80"
           ToPort: "80"
           CidrIp: "0.0.0.0/0"
+  SGSelfReferenceRule:
+    Type: "AWS::EC2::SecurityGroupIngress"
+    Properties:
+      GroupId: !Ref SGWordpress
+      IpProtocol: "tcp"
+      FromPort: "0"
+      ToPort: "65535"
+      SourceSecurityGroupId: !Ref SGWordpress
 Outputs:
   exportSGWordpress:
     Description: "Export Wordpress Instance Security Group"
