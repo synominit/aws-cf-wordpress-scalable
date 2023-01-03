@@ -47,7 +47,7 @@ Outputs:
   exportWordpressInstanceProfile:
     Description: "Export Wordpress EC2 Instance Profile ARN"
     Value:
-      Fn::GetAtt: ["WordpressInstanceProfile", "Name"]
+      Ref: WordpressInstanceProfile
     Export:
       Name: skyelp-wordpress-instanceprofile
   exportWordpressRole:
