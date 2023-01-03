@@ -148,17 +148,18 @@ Resources:
             secretsarn=$(aws cloudformation list-exports --region $region --query 'Exports[?Name==`skyelp-secretsmanager-arn`].Value' --output text)
             albhost=$(aws cloudformation list-exports --region $region --query 'Exports[?Name==`wordpress-app-loadbalancer-url`].Value' --output text)
 
+            mkdir /temp
             aws secretsmanager get-secret-value --region $region --secret-id $secretsarn --query SecretString  --output text > /temp/temp_pass.txt
-            DatabaseName=$(cat temp_pass.txt | jq -r .dbname)
-            DatabasePassword=$(cat temp_pass.txt | jq -r .password)
-            DatabaseUsername=$(cat temp_pass.txt | jq -r .username)
-            DatabaseEndpoint=$(cat temp_pass.txt | jq -r .host)
+            DatabaseName=$(cat /temp/temp_pass.txt | jq -r .dbname)
+            DatabasePassword=$(cat /temp/temp_pass.txt | jq -r .password)
+            DatabaseUsername=$(cat /temp/temp_pass.txt | jq -r .username)
+            DatabaseEndpoint=$(cat /temp/temp_pass.txt | jq -r .host)
             rm /temp/temp_pass.txt
 
             # Setup Wordpress EFS
             mkdir -p /var/www/html/wp-content
             chown -R ec2-user:apache /var/www/
-            echo -e "$WPEFS:/ /var/www/html/wp-content efs _netdev,tls,iam 0 0" >> /etc/fstab
+            echo -e "$wordpressefs:/ /var/www/html/wp-content efs _netdev,tls,iam 0 0" >> /etc/fstab
             mount -a -t efs defaults
 
             #  CWAgent Install
