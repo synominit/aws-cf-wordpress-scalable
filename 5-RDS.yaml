@@ -32,7 +32,7 @@ Resources:
         SecretStringTemplate: '{"username": "admin"}'
         GenerateStringKey: password
         PasswordLength: 32
-        ExcludeCharacters: '"@/\'
+        ExcludePunctuation: True
   SecretsManagerRDSInstanceAttachment:
     Type: "AWS::SecretsManager::SecretTargetAttachment"
     Properties:
